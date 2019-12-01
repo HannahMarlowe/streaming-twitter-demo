@@ -4,18 +4,17 @@
 
 # Abstract
 
-
 In this builders session you will use the natural language processing (NLP) service, Amazon Comprehend, to extract key phrases, entities, topics, and sentiment from social media posts about government agency programs such as TSA PreCheck, upcoming public transit initiatives, and the next NASA Mars rover mission. You will utilize the NLP results to estimate overall public opinion about each program.
 
+This demo is based on two prevous blog posts:
+https://aws.amazon.com/blogs/machine-learning/build-a-social-media-dashboard-using-machine-learning-and-bi-services/
+https://aws.amazon.com/blogs/machine-learning/build-a-serverless-twitter-reader-using-aws-fargate/
 
 
 # Runbook
 
 
 The demo will utilize Amazon Kinesis Firehose to ingest tweets about public sector entities of interest into a 'raw' directory within a bucket in Amazon S3 that is used as a data lake. The upload of each tweet to S3 will trigger a Lambda function that runs sentiment and entity identification analysis against the tweet, and uploads back to S3 where it is available for ad-hoc query with Amazon Athena and visualzation with Amazon QuickSight. The diagram below illustrates the data flow.
-
-
-
 
 In addition to building a social media dashboard, we want to capture both the raw and enriched datasets and durably store them in a data lake. This allows data analysts to quickly and easily perform new types of analytics and machine learning on this data. 
 During this session you will be implementing the following:
@@ -25,7 +24,6 @@ During this session you will be implementing the following:
 * Leverage separate Kinesis data delivery streams within Amazon Kinesis Data Firehose to write the analyzed data back to the data lake.
 * Leverage Amazon Athena to query the data stored in Amazon S3.
 * Build a set of dashboards using Amazon QuickSight.
-
 
 
 ## Build this architecture yourself
@@ -71,20 +69,45 @@ The following diagram shows an example:
 Take some time to examine the rest of the code. With a few lines of code, we can call Amazon Translate to convert between Arabic, Portuguese, Spanish, French, German, English, and many other languages.
 The same is true for adding natural language processing into the application using Amazon Comprehend. Note how easily we were able to perform the sentiment analysis and entity extraction on the tweets within the Lambda function.
 
-### Start the Twitter stream producer
 
-The only server used in the example is outside the actual ingestion flow from Kinesis Data Firehose. It’s used to collect the tweets from Twitter and push them into Kinesis Data Firehose. In a future post, we’ll show you how you can shift this component to also be serverless.
-Use SSH to connect to the Amazon Linux EC2 instance that the CloudFormation stack created.
-Part of the CloudFormation stack outputs includes an SSH-style command that can be used on many systems to connect to the instance.
-**Note**: Refer to the Amazon EC2 documentation for details on how to connect either from a Windows or Mac/Linux machine.
-Run the following command:
+### Build the application
 
+We are going to use AWS Fargate to run our serverless twitter application. The node application is used to collect the tweets from Twitter and push them into Kinesis Data Firehose. 
 
-```
-`node twitter_stream_producer_app.js`
-```
+To run our application, we'll first need to build a Docker container. We are going to use an Amazon SageMaker Notebook that was deployed with the CloudFormation template as our development environment to build and push the contianer image.
 
-This starts the flow of tweets. If you want to keep the flow running, simply run it as a background job. For simple testing, you can also keep the SSH tunnel open.
+Navigate to the SageMaker console and find the newly created Notebook instance. Click 'Open Jupyter Lab' to open the Jupyter Lab application. 
+
+![Example Notebook](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/jupyterlab-screenshot.png "Jupyter Lab")
+
+Open config-fargate.ipynb, then select Run -> Run All Cells to run the notebook. This will create a new ECR repository, build the docker image, and push it to ECR. Take a look at the application code in the "SocialAnalyticsReader" folder.
+
+### Create and start the Fargate Task
+
+1. In the Amazon ECS console, choose Repositories and select the tweetreader-repo repository that was created in the previous step. Copy the Repository URI.
+
+2. Choose Task Definitions and then choose Create New Task Definition.
+3. Select launch type compatibility as FARGATE and click Next Step.
+4. In the create task definition screen, do the following:
+ - In Task Definition Name, type tweetreader-task
+ - In Task Role, choose AccessRoleForTweetReaderfromFG
+ - In Task Memory, choose 2GB
+ - In Task CPU, choose 1 vCPU
+5. Choose Add Container under Container Definitions. On the Add Container page, do the following:
+ - Enter Container name as tweetreader-cont
+ - Enter Image URL copied from step 1
+ - Enter Memory Limits as 128 and choose Add.
+Note: Select TaskExecutionRole as “ecsTaskExecutionRole” if it already exists. If not, select Create new role and it will create “ecsTaskExecutionRole” for you.
+6. Choose the Create button on the task definition screen to create the task. It will successfully create the task, execution role and Amazon CloudWatch Logs groups.
+7. In the Amazon ECS console, choose Clusters and create cluster. Select template as “Networking only, Powered by AWS Fargate” and chooose the next step.
+8. Enter cluster name as tweetreader-cluster and choose Create.
+
+### Create and start the Fargate task    
+
+1. In the Amazon ECS console, go to Task Definitions, select the tweetreader-task, choose Actions, and then choose Run Task.
+On the Run Task page, for Launch Type select Fargate, for Cluster select tweetreader-cluster, select Cluster VPC and Subnets values, and then choose Run Task.
+2. To test the application, choose the running task in the Fargate console. Go to the logs tab and verify there is nothing there. This means the node application is running and no errors occurred. 
+
 After a few minutes, you should be able to see the various datasets in the S3 bucket that the CloudFormation template created:
 **Note (If you don’t see all three prefixes)**: If you don’t see any data, check to make sure the Twitter reader is reading correctly and not creating errors. If you only see a raw prefix and not the others, check to make sure that the S3 trigger is set up on the Lambda function.
 
