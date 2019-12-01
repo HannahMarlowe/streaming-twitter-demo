@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
-Description: 'AWS CloudFormation template for the re:Invent 2018 Sentiment Analysis Builder Session'
+Description: 'AWS CloudFormation template for the re:Invent 2019 Sentiment Analysis Builder Session'
 Parameters:
   NotebookInstanceType:
     Description: SageMaker instance type.
