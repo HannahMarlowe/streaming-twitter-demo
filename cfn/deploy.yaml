@@ -19,11 +19,11 @@ Parameters:
   TwitterTermList:
     Description: List of terms for twitter to listen to
     Type: String
-    Default: "'AWS', 'VPC', 'EC2', 'RDS', 'S3'"
+    Default: '"AWS", "VPC", "EC2", "RDS", "S3"'
   TwitterLanguages:
     Description: List of languages to use for the twitter streaming reader
     Type: String
-    Default: "'en', 'es', 'de', 'fr', 'ar', 'pt'"
+    Default: '"en", "es", "de", "fr", "ar", "pt"'
   TwitterAuthConsumerKey:
     Description: Consumer key for access twitter
     Type: String
@@ -138,7 +138,7 @@ Resources:
           -
             Effect: Allow
             Principal:
-              Service: ec2.amazonaws.com
+              Service: ecs-tasks.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
        - arn:aws:iam::aws:policy/AmazonKinesisFirehoseFullAccess
@@ -154,15 +154,15 @@ Resources:
        Fn::Sub:
         - |
             {
-            twitter: {
-                consumer_key: '${TwitterConsumerKey}',
-                consumer_secret: '${TwitterConsumerSecret}',
-                access_token: '${TwitterAccessToken}',
-                access_token_secret: '${TwitterTokenSecret}'
+            "twitter": {
+                "consumer_key": "${TwitterConsumerKey}",
+                "consumer_secret": "${TwitterConsumerSecret}",
+                "access_token": "${TwitterAccessToken}",
+                "access_token_secret": "${TwitterTokenSecret}"
               },
-            topics: [${TwitterTerms}],
-            languages: [${TwitterLanguages}],
-            kinesis_delivery: '${KinesisIngestionFirehose}'
+            "topics": [${TwitterTerms}],
+            "languages": [${TwitterLanguages}],
+            "kinesis_delivery": "${KinesisIngestionFirehose}"
             }
         - {
             TwitterTerms: !Ref TwitterTermList,
