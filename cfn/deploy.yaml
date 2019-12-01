@@ -1,0 +1,392 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: 'AWS CloudFormation template for the re:Invent 2018 Sentiment Analysis Builder Session'
+Parameters:
+  NotebookInstanceType:
+    Description: SageMaker instance type.
+    Type: String
+    Default: ml.t2.medium
+    AllowedValues:
+      - ml.t2.medium
+      - ml.t2.large
+      - ml.t2.xlarge
+      - ml.t2.2xlarge
+      - ml.m4.xlarge
+      - ml.m4.2xlarge
+      - ml.m4.4xlarge
+      - ml.m4.10xlarge
+      - ml.m4.16xlarge
+ TwitterTermList:
+    Description: List of terms for twitter to listen to
+    Type: String
+    Default: "'AWS', 'VPC', 'EC2', 'RDS', 'S3'"
+  TwitterLanguages:
+    Description: List of languages to use for the twitter streaming reader
+    Type: String
+    Default: "'en', 'es', 'de', 'fr', 'ar', 'pt'"
+  TwitterAuthConsumerKey:
+    Description: Consumer key for access twitter
+    Type: String
+  TwitterAuthConsumerSecret:
+    Description: Consumer Secret for access twitter
+    Type: String
+  TwitterAuthAccessToken:
+    Description: Access Token for calling twitter
+    Type: String
+  TwitterAuthAccessTokenSecret:
+    Description: Access Token Secret for calling twitter
+    Type: String
+  ApplicationName:
+    Description: Name of the application deploying for the Social Media Analytics
+    Type: String
+    Default: Social-Media-Analytics
+  VpcCIDR:
+    Description: Please enter the IP range (CIDR notation) for this VPC
+    Type: String
+    Default: 10.193.0.0/16
+  PublicSubnet1CIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: 10.193.10.0/24
+
+Resources:
+  SageMakerSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Allow Access
+      VpcId: !Ref VPC
+  NeptuneNotebookInstance:
+    Type: 'AWS::SageMaker::NotebookInstance'
+    Properties:
+      InstanceType: !Ref NotebookInstanceType
+      SubnetId: !Ref PublicSubnet1
+      SecurityGroupIds: 
+        - !GetAtt 
+          - SageMakerSecurityGroup
+          - GroupId
+      RoleArn: !GetAtt 
+        - ExecutionRole
+        - Arn
+      LifecycleConfigName: !GetAtt 
+        - NotebookInstanceLifecycleConfig
+        - NotebookInstanceLifecycleConfigName
+      DefaultCodeRepository:
+        https://github.com/HannahMarlowe/streaming-twitter-demo.git
+      Tags:
+        - Key: Name
+          Value: Streaming-tweets-tutorial
+        - Key: StackId
+          Value: !Sub '${AWS::StackId}'
+        - Key: Stack
+          Value: !Sub '${AWS::Region}-${AWS::StackName}'
+  NotebookInstanceLifecycleConfig:
+    Type: 'AWS::SageMaker::NotebookInstanceLifecycleConfig'
+    Properties:
+      OnStart:
+        - Content: !Base64 
+            |
+            #!/bin/bash -ex
+            set -e
+
+            sleep 60
+
+            yum clean all
+
+            yum -y install nodejs npm --enablerepo=epel
+
+            npm config set registry http://registry.npmjs.org/
+
+            npm install node-sass request@2.81.0
+
+  ExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - sagemaker.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: streaming-demo-policy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: 
+                  - 'sagemaker:*'
+                  - 's3:*'
+                  - 'athena:*'
+                  - 'ssm:PutParameter'
+                  - 'firehose:*'
+                  - 'iam:CreateRole'
+                  - 'ecr:*'
+                  - 'iam:AttachRolePolicy'
+                  - 'ssm:GetParameter'
+                Resource: '*'
+
+  FargateExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+       - arn:aws:iam::aws:policy/AmazonKinesisFirehoseFullAccess
+       - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+
+  ConfigParam:
+    Type: AWS::SSM::Parameter
+    Properties: 
+      Description: Twitter configuration for streaming app
+      Name: !Sub '/${AWS::StackName}/twitter-reader/aws-config'
+      Type: String
+      Value: 
+       Fn::Sub:
+        - |
+            {
+            twitter: {
+                consumer_key: '${TwitterConsumerKey}',
+                consumer_secret: '${TwitterConsumerSecret}',
+                access_token: '${TwitterAccessToken}',
+                access_token_secret: '${TwitterTokenSecret}'
+              },
+            topics: [${TwitterTerms}],
+            languages: [${TwitterLanguages}],
+            kinesis_delivery: '${KinesisIngestionFirehose}'
+            }
+        - {
+            TwitterTerms: !Ref TwitterTermList,
+            TwitterLanguages: !Ref TwitterLanguages ,
+            TwitterConsumerKey: !Ref TwitterAuthConsumerKey,
+            TwitterConsumerSecret: !Ref TwitterAuthConsumerSecret,
+            TwitterAccessToken: !Ref TwitterAuthAccessToken,
+            TwitterTokenSecret: !Ref TwitterAuthAccessTokenSecret,
+            KinesisIngestionFirehose: !Ref IngestionFirehoseStream
+          }
+  
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+          - Key: Name
+            Value: !Ref ApplicationName
+
+  InternetGateway:
+      Type: AWS::EC2::InternetGateway
+      Properties:
+          Tags:
+              - Key: Name
+                Value: !Ref ApplicationName
+
+  InternetGatewayAttachment:
+      Type: AWS::EC2::VPCGatewayAttachment
+      Properties:
+          InternetGatewayId: !Ref InternetGateway
+          VpcId: !Ref VPC
+
+  PublicSubnet1:
+      Type: AWS::EC2::Subnet
+      Properties:
+          VpcId: !Ref VPC
+          AvailabilityZone: !Select [ 0, !GetAZs ]
+          CidrBlock: !Ref PublicSubnet1CIDR
+          MapPublicIpOnLaunch: true
+          Tags:
+              - Key: Name
+                Value: !Sub ${ApplicationName} Public Subnet (AZ1)
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+        VpcId: !Ref VPC
+        Tags:
+            - Key: Name
+              Value: !Sub ${ApplicationName} Public Routes
+
+  DefaultPublicRoute:
+      Type: AWS::EC2::Route
+      DependsOn: InternetGatewayAttachment
+      Properties:
+          RouteTableId: !Ref PublicRouteTable
+          DestinationCidrBlock: 0.0.0.0/0
+          GatewayId: !Ref InternetGateway
+
+  PublicSubnet1RouteTableAssociation:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+          RouteTableId: !Ref PublicRouteTable
+          SubnetId: !Ref PublicSubnet1
+
+  TweetsBucket:
+    Type: AWS::S3::Bucket
+
+  IngestionFirehoseStream:
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Properties:
+      ExtendedS3DestinationConfiguration:
+        BucketARN: !Join ['', ['arn:aws:s3:::', !Ref TweetsBucket]]
+        BufferingHints:
+          IntervalInSeconds: 60
+          SizeInMBs: 5
+        Prefix: 'raw/'
+        CompressionFormat: 'UNCOMPRESSED'
+        RoleARN: !GetAtt IngestionFirehoseRole.Arn
+
+  EntitiesFirehoseStream:
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Properties:
+      ExtendedS3DestinationConfiguration:
+        BucketARN: !Join ['', ['arn:aws:s3:::', !Ref TweetsBucket]]
+        BufferingHints:
+          IntervalInSeconds: 60
+          SizeInMBs: 5
+        Prefix: 'entities/'
+        CompressionFormat: 'UNCOMPRESSED'
+        RoleARN: !GetAtt IngestionFirehoseRole.Arn
+
+  SentimentFirehoseStream:
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Properties:
+      ExtendedS3DestinationConfiguration:
+        BucketARN: !Join ['', ['arn:aws:s3:::', !Ref TweetsBucket]]
+        BufferingHints:
+          IntervalInSeconds: 60
+          SizeInMBs: 5
+        Prefix: 'sentiment/'
+        CompressionFormat: 'UNCOMPRESSED'
+        RoleARN: !GetAtt IngestionFirehoseRole.Arn
+
+  IngestionFirehoseRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service: firehose.amazonaws.com
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                sts:ExternalId: !Ref 'AWS::AccountId'
+
+  IngestionFirehosePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: TweetIngestionFirehosePolicy
+      Roles:
+        - !Ref IngestionFirehoseRole
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:AbortMultipartUpload
+              - s3:GetBucketLocation
+              - s3:GetObject
+              - s3:ListBucket
+              - s3:ListBucketMultipartUploads
+              - s3:PutObject
+            Resource:
+              - !Join ['', ['arn:aws:s3:::', !Ref TweetsBucket]]
+              - !Join ['', ['arn:aws:s3:::', !Ref TweetsBucket, '/*']]
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+              - logs:DescribeLogStreams
+            Resource:
+              - arn:aws:logs:*:*:*
+
+  SocialMediaAnalyticLambdaFuntionLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: [lambda.amazonaws.com]
+          Action: ['sts:AssumeRole']
+      Path: /
+      Policies:
+      - PolicyName: SocialMediaAnalyticLambdaFuntionExecutionPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Sid: CloudWatchAccess
+            Effect: Allow
+            Action: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents']
+            Resource: arn:aws:logs:*:*:*
+          - Sid: S3Access
+            Effect: Allow
+            Action: ['s3:GetObject', 's3:PutObject']
+            Resource: [!GetAtt [TweetsBucket, Arn],
+                      !Join ['', [!GetAtt [TweetsBucket, Arn], /*]]]
+          - Sid: FirehoseAccess
+            Effect: Allow
+            Action: ['firehose:ListDeliveryStreams', 'firehose:PutRecord', 'firehose:PutRecordBatch']
+            Resource: [!GetAtt [SentimentFirehoseStream, Arn],
+                       !GetAtt [EntitiesFirehoseStream, Arn]]
+          - Sid: ComprehendAccess
+            Effect: Allow
+            Action: ['comprehend:DetectEntities', 'comprehend:DetectSentiment']
+            Resource: '*'   
+          - Sid: TranslateAccess
+            Effect: Allow
+            Action: ['translate:TranslateText']
+            Resource: '*'           
+
+  SocialMediaAnalyticsLambda:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      CodeUri: s3://reinvent18-builders/sentiment/code/SocialMediaLambdaFunction.zip
+      Handler: index.handler
+      Runtime: nodejs12.x
+      MemorySize: 256
+      Timeout: 300
+      Role:
+        Fn::GetAtt:
+        - SocialMediaAnalyticLambdaFuntionLambdaRole
+        - Arn
+      Environment:
+        Variables:
+          SENTIMENT_STREAM: !Ref SentimentFirehoseStream
+          ENTITY_STREAM: !Ref EntitiesFirehoseStream
+Outputs:
+
+  LambdaFunctionConsoleURL:
+    Description: URL to the Lambda Function console
+    Value: !Join ['', ['https://console.aws.amazon.com/lambda/home?region=', !Ref "AWS::Region", '#/functions/', !Ref "SocialMediaAnalyticsLambda", '?tab=graph']]
+
+  S3ConsoleURL:
+    Description: URL to the Lambda Function console
+    Value: !Join ['', ['https://s3.console.aws.amazon.com/s3/buckets/', !Ref 'TweetsBucket', '/?region=', !Ref "AWS::Region", '&tab=overview']]
+
+  TwitterRawLocation:
+    Description: S3 Twitter Raw location.
+    Value: !Join ['', ['s3://', !Ref 'TweetsBucket', /raw/]]
+
+  TwitterEntitiesLocation:
+    Description: S3 Twitter Entities location.
+    Value: !Join ['', ['s3://', !Ref 'TweetsBucket', /entities/]]
+
+  TwitterSentimentLocation:
+    Description: S3 Twitter Sentiment location.
+    Value: !Join ['', ['s3://', !Ref 'TweetsBucket', /sentiment/]]
+
