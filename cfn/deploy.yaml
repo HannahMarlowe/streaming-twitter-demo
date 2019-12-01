@@ -16,7 +16,7 @@ Parameters:
       - ml.m4.4xlarge
       - ml.m4.10xlarge
       - ml.m4.16xlarge
- TwitterTermList:
+  TwitterTermList:
     Description: List of terms for twitter to listen to
     Type: String
     Default: "'AWS', 'VPC', 'EC2', 'RDS', 'S3'"
@@ -148,7 +148,7 @@ Resources:
     Type: AWS::SSM::Parameter
     Properties: 
       Description: Twitter configuration for streaming app
-      Name: !Sub '/${AWS::StackName}/twitter-reader/aws-config'
+      Name: !Sub '/twitter-reader/aws-config'
       Type: String
       Value: 
        Fn::Sub:
