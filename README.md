@@ -4,9 +4,11 @@
 
 # Abstract
 
-
 In this builders session you will use the natural language processing (NLP) service, Amazon Comprehend, to extract key phrases, entities, topics, and sentiment from social media posts about government agency programs such as TSA PreCheck, upcoming public transit initiatives, and the next NASA Mars rover mission. You will utilize the NLP results to estimate overall public opinion about each program.
 
+This demo is based on two prevous blog posts:
+https://aws.amazon.com/blogs/machine-learning/build-a-social-media-dashboard-using-machine-learning-and-bi-services/
+https://aws.amazon.com/blogs/machine-learning/build-a-serverless-twitter-reader-using-aws-fargate/
 
 
 # Runbook
@@ -72,7 +74,7 @@ Take some time to examine the rest of the code. With a few lines of code, we can
 The same is true for adding natural language processing into the application using Amazon Comprehend. Note how easily we were able to perform the sentiment analysis and entity extraction on the tweets within the Lambda function.
 
 
-### [Update in progress] Build the application
+### Build the application
 
 We are going to use AWS Fargate to run our serverless twitter application. The node application is used to collect the tweets from Twitter and push them into Kinesis Data Firehose. 
 
