@@ -55,7 +55,7 @@ Resources:
     Properties:
       GroupDescription: Allow Access
       VpcId: !Ref VPC
-  NeptuneNotebookInstance:
+  NotebookInstance:
     Type: 'AWS::SageMaker::NotebookInstance'
     Properties:
       InstanceType: !Ref NotebookInstanceType
@@ -369,6 +369,21 @@ Resources:
           SENTIMENT_STREAM: !Ref SentimentFirehoseStream
           ENTITY_STREAM: !Ref EntitiesFirehoseStream
 Outputs:
+  NotebookInstanceId:
+    Value: !Ref NotebookInstance
+
+  Notebook:
+    Value: !Join 
+      - ''
+      - - 'https://'
+        - !Select 
+          - 1
+          - !Split 
+            - /
+            - !Ref NotebookInstance
+        - .notebook.
+        - !Ref 'AWS::Region'
+        - .sagemaker.aws/
 
   LambdaFunctionConsoleURL:
     Description: URL to the Lambda Function console
