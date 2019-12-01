@@ -16,9 +16,6 @@ https://aws.amazon.com/blogs/machine-learning/build-a-serverless-twitter-reader-
 
 The demo will utilize Amazon Kinesis Firehose to ingest tweets about public sector entities of interest into a 'raw' directory within a bucket in Amazon S3 that is used as a data lake. The upload of each tweet to S3 will trigger a Lambda function that runs sentiment and entity identification analysis against the tweet, and uploads back to S3 where it is available for ad-hoc query with Amazon Athena and visualzation with Amazon QuickSight. The diagram below illustrates the data flow.
 
-
-
-
 In addition to building a social media dashboard, we want to capture both the raw and enriched datasets and durably store them in a data lake. This allows data analysts to quickly and easily perform new types of analytics and machine learning on this data. 
 During this session you will be implementing the following:
 
@@ -27,7 +24,6 @@ During this session you will be implementing the following:
 * Leverage separate Kinesis data delivery streams within Amazon Kinesis Data Firehose to write the analyzed data back to the data lake.
 * Leverage Amazon Athena to query the data stored in Amazon S3.
 * Build a set of dashboards using Amazon QuickSight.
-
 
 
 ## Build this architecture yourself
@@ -86,7 +82,7 @@ Navigate to the SageMaker console and find the newly created Notebook instance. 
 
 Open config-fargate.ipynb, then select Run -> Run All Cells to run the notebook. This will create a new ECR repository, build the docker image, and push it to ECR. Take a look at the application code in the "SocialAnalyticsReader" folder.
 
-### [Update in progress] Create and start the Fargate Task
+### Create and start the Fargate Task
 
 1. In the Amazon ECS console, choose Repositories and select the tweetreader-repo repository that was created in the previous step. Copy the Repository URI.
 
@@ -106,7 +102,7 @@ Note: Select TaskExecutionRole as “ecsTaskExecutionRole” if it already exist
 7. In the Amazon ECS console, choose Clusters and create cluster. Select template as “Networking only, Powered by AWS Fargate” and chooose the next step.
 8. Enter cluster name as tweetreader-cluster and choose Create.
 
-### Start the Fargate task and verify the application       
+### Create and start the Fargate task    
 
 1. In the Amazon ECS console, go to Task Definitions, select the tweetreader-task, choose Actions, and then choose Run Task.
 On the Run Task page, for Launch Type select Fargate, for Cluster select tweetreader-cluster, select Cluster VPC and Subnets values, and then choose Run Task.
