@@ -435,6 +435,7 @@ Let’s step through adding one more visual to this analysis to show the transla
 5. Then, on the left-side, choose Filter.
 6. Create One : language.
 7. Then choose Custom filter, Does not equal, and enter a value of en.
+![](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/quicksight_filtered_language.png)
 
 **Note**: You might need to adjust the column widths in the Table view based on your screen resolution to see the last column.
 Now you can resize and see the Entities, Sentiment over time, and translated tweets.
