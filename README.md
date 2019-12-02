@@ -270,7 +270,7 @@ SELECT * from socialanalytics.tweets limit 20;
 Pull the top entity types:
 
 ```sql
-SELECT type, count(*) cnt from socialanalytics.tweet_entitiesgroup by type order by cnt desc
+SELECT type, count(*) cnt from socialanalytics.tweet_entities group by type order by cnt desc
 ```
 
 Now we can pull the top 20 commercial items:
