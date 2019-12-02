@@ -26,10 +26,18 @@ During this session you will be implementing the following:
 
 We’ve provided you with an AWS CloudFormation template that will create all the ingestion components, ***_except_*** for the Amazon S3 notification for AWS Lambda (depicted as the dotted blue line).
 
-Click the button below to launch the CloudFormation stack. 
-[![Launch Stack](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/launch.svg)](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=Social-Media-Analytics&templateURL=https://reinvent18-builders.s3.amazonaws.com/2019/sentiment/code/deploy.yaml)
+Click the button below to launch the CloudFormation stack in your preferred region. 
+#[![Launch Stack](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/launch.svg)](https:#//console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=Social-Media-Analytics&templateURL=https://reinvent18-#builders.s3.amazonaws.com/2019/sentiment/code/deploy.yaml)
 
-This will launch the CloudFormation stack automatically into the us-east-1 Region.
+#This will launch the CloudFormation stack automatically into the us-east-1 Region.
+
+| Region | View Template | Launch
+| ------ | ------ | ----- |
+| US East (N. Virginia) | [View](https://s3.amazonaws.com/twitter-analysis-demo-us-east-1/cfn/deploy.yaml) |[![sample image](https://docs.aws.amazon.com/documentdb/latest/developerguide/images/cloudformation-launch-stack-button.png)](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/review?templateURL=https://s3.amazonaws.com/twitter-analysis-demo-us-east-1/cfn/deploy.yaml&stackName=twitter-analysis-stack)
+| US East (Ohio) | [View](https://s3-us-east-2.amazonaws.com/twitter-analysis-demo-us-east-2/cfn/deploy.yaml) | [![sample image](https://docs.aws.amazon.com/documentdb/latest/developerguide/images/cloudformation-launch-stack-button.png)](https://us-east-2.console.aws.amazon.com/cloudformation/home?region=us-east-2#/stacks/create/review?templateURL=https://s3.amazonaws.com/twitter-analysis-demo-us-east-2/cfn/deploy.yaml&stackName=twitter-analysis-stack)
+| EU West (Ireland) | [View](https://s3-eu-west-1.amazonaws.com/twitter-analysis-demo-eu-west-1/cfn/deploy.yaml) | [![sample image](https://docs.aws.amazon.com/documentdb/latest/developerguide/images/cloudformation-launch-stack-button.png)](https://eu-west-1.console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/create/review?templateURL=https://s3-eu-west-1.amazonaws.com/twitter-analysis-demo-eu-west-1/cfn/deploy.yaml&stackName=twitter-analysis-stack)
+| US West (Oregon) | [View](https://s3-us-west-2.amazonaws.com/twitter-analysis-demo-us-west-2/cfn/deploy.yaml) | [![sample image](https://docs.aws.amazon.com/documentdb/latest/developerguide/images/cloudformation-launch-stack-button.png)](https://us-west-2.console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/create/review?templateURL=https://s3-us-west-2.amazonaws.com/twitter-analysis-demo-us-west-2/cfn/deploy.yaml&stackName=twitter-analysis-stack)
+ 
 
 Specify these required parameters:
 
