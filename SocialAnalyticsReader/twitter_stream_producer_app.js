@@ -21,7 +21,7 @@ var config = require('./config');
 var producer = require('./twitter_stream_producer');
 
 // var kinesis = new AWS.Kinesis({region: config.kinesis.region});
-var kinesis_firehose = new AWS.Firehose({apiVersion: '2015-08-04', region: config.region});
+var kinesis_firehose = new AWS.Firehose({apiVersion: '2015-08-04'});
 // console.log(kinesis_firehose.listDeliveryStreams());
 
 var params = {
@@ -30,7 +30,7 @@ var params = {
 };
 
 var config_from_parameter_store;
-var ssm = new AWS.SSM({region: config.region});
+var ssm = new AWS.SSM();
 var request = ssm.getParameter(params);
 var promise = request.promise();
 

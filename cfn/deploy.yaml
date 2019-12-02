@@ -127,6 +127,7 @@ Resources:
                   - 'ecr:*'
                   - 'iam:AttachRolePolicy'
                   - 'ssm:GetParameter'
+                  - 'glue:*'
                 Resource: '*'
 
   FargateExecutionRole:

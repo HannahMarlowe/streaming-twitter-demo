@@ -18,6 +18,5 @@ permissions and limitations under the License.
 var config = module.exports = {
  waitBetweenDescribeCallsInSeconds: 2,
  recordsToWritePerBatch: 100,
- waitBetweenPutRecordsCallsInMilliseconds: 50,
- region: 'us-east-1'   
+ waitBetweenPutRecordsCallsInMilliseconds: 50
 };
