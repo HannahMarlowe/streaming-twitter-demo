@@ -362,17 +362,21 @@ select lang, ts.text, ts.originaltext from socialanalytics.tweet_sentiments ts j
 ### Building QuickSight dashboards
 
 1. Launch into [QuickSight](https://us-east-1.quicksight.aws.amazon.com/sn/start).
-2. Choose Manage data from the top right.
-3. Choose New Data Set.
-4. Create a new Athena Data Source.
-5. Select the socialanalytics database and the tweet_sentiments table.
-6. Then Choose Edit/Preview Data. 
-7. Under Table, choose Switch to custom SQL tool: 
-8. Give the query a name (such as ‘SocialAnalyticsQuery’)
-9. Put in this query:
+2. Click the admin icon in the top right of the console and select "Manage QuickSight"
+3. Under Security & permission, select the 'Add or remove' option for QuickSight access to AWS Services
+4. Under Amazon S3, select the details link to be taken to a set of buckets that QuickSight can access
+5. Make sure that QuickSight has access to the bucket created by CloudFormation where the twitter data is stored
+6. Choose Manage data from the top right.
+7. Choose New Data Set.
+8. Create a new Athena Data Source.
+9. Select the socialanalytics database and the tweet_sentiments table.
+10. Then Choose Edit/Preview Data. 
+11. Under Table, choose Switch to custom SQL tool: 
+12. Give the query a name (such as ‘SocialAnalyticsQuery’)
+13. Put in this query:
 
 ```sql
-SELECT  s.* ,e.entity ,e.type ,e.score,
+SELECT  s.*, e.entity, e.type, e.score,
          t.lang as language,
          coordinates.coordinates[1] AS lon,
          coordinates.coordinates[2] AS lat,
@@ -384,10 +388,10 @@ SELECT  s.* ,e.entity ,e.type ,e.score,
     ON (s.tweetid = t.id) JOIN socialanalytics.tweet_entities e ON (e.tweetid = t.id)
 ```
 
-1. Then choose Finish.
-2. This saves the query and lets you see sampled data.
-3. Switch the datatype for the timestamp_in_seconds to be a date: 
-4. And then choose Save and Visualize.
+14. Then choose Finish.
+15. This saves the query and lets you see sampled data.
+16. Switch the datatype for the timestamp_in_seconds to be a date: 
+17. And then choose Save and Visualize.
 
 Now you can easily start to build some dashboards.
 **Note**: With the way I created the custom query, you’ll want to count the distinct tweetids as the value.
