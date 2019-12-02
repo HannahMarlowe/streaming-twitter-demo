@@ -25,8 +25,9 @@ During this session you will be implementing the following:
 ## Deploying the solution
 
 We’ve provided you with an AWS CloudFormation template that will create all the ingestion components, ***_except_*** for the Amazon S3 notification for AWS Lambda (depicted as the dotted blue line).
-In the AWS Management Console, go to the CloudFormation console and select Create Stack.
-Choose the option to upload a template file and select the deploy.yaml template file.
+
+Click the button below to launch the CloudFormation stack. 
+[![Launch Stack](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/launch.svg)](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=Social-Media-Analytics&templateURL=https://reinvent18-builders.s3.amazonaws.com/2019/sentiment/code/deploy.yaml)
 
 This will launch the CloudFormation stack automatically into the us-east-1 Region.
 
@@ -43,22 +44,37 @@ Specify these required parameters:
 **You will need to create an app on Twitter or reference the one above**: Create a consumer key (API key), consumer secret key (API secret), access token, and access token secret and use them as parameters in the CloudFormation stack. You can create them using this [link](https://apps.twitter.com/).
 Additionally, you can modify which terms and languages will be pulled from the Twitter streaming API. This lambda implementation calls Comprehend for each tweet.
 
-In the CloudFormation console, you can acknowledge by checking the boxes to allow AWS CloudFormation to create IAM resources and resource with custom name. The CloudFormation template uses serverless transforms. Choose Create Change Set to check the resources that the transforms add, then choose Execute.
+In the CloudFormation console, you can acknowledge by checking the boxes to allow AWS CloudFormation to create IAM resources and resource with custom name. 
+![Capabilities](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/cfn_caps.png)
+The CloudFormation template uses serverless transforms. Choose Create Change Set to check the resources that the transforms add, then choose Execute.
+
 After the CloudFormation stack is launched, wait until it is complete.
+
+![Stack Launch](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/cfn_stack.png)
+
 When the launch is finished, you’ll see a set of outputs that we’ll use throughout this blog post:
+
 
 ### Setting up S3 Notification – Call Amazon Translate/Comprehend from new Tweets
 
 After the CloudFormation stack launch is completed, go to the outputs tab for direct links and information. Then click the LambdaFunctionConsoleURL link to launch directly into the Lambda function.
+
+![outputs](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/cfn_outputs.png)
+
 The Lambda function calls Amazon Translate and Amazon Comprehend to perform language translation and natural language processing (NLP) on tweets. The function uses Amazon Kinesis to write the analyzed data to Amazon S3.
 
 Most of this has been set up already by the CloudFormation stack, although we will have you add the S3 notification so that the Lambda function is invoked when new tweets are written to S3:
 
 1. Under Add Triggers, select the S3 trigger.
+![Trigger step 1](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/lambda_trigger2.png)
+
 2. Then configure the trigger with the new S3 bucket that CloudFormation created with the ‘raw/’ prefix. The event type should be Object Created (All).
+![Trigger step 2](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/lambda_trigger3.png)
 
 Following least privilege patterns, the IAM role that the Lambda function has been assigned only has access to the S3 bucket that the CloudFormation template created.
 The following diagram shows an example:
+![Lambda Diagram](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/twitter-dashboard-7.gif)
+
 Take some time to examine the rest of the code. With a few lines of code, we can call Amazon Translate to convert between Arabic, Portuguese, Spanish, French, German, English, and many other languages.
 The same is true for adding natural language processing into the application using Amazon Comprehend. Note how easily we were able to perform the sentiment analysis and entity extraction on the tweets within the Lambda function.
 
@@ -66,44 +82,83 @@ The same is true for adding natural language processing into the application usi
 
 We are going to use AWS Fargate to run our serverless twitter application. The node application is used to collect the tweets from Twitter and push them into Kinesis Data Firehose. 
 
-To run our application, we'll first need to build a Docker container. We are going to use an Amazon SageMaker Notebook that was deployed with the CloudFormation template as our development environment to build and push the contianer image.
+To run our application, we'll first need to build a Docker container. We are going to use an Amazon SageMaker Notebook that was deployed with the CloudFormation template as our development environment to build and push the contianer image. 
 
 Navigate to the SageMaker console and find the newly created Notebook instance. Click 'Open Jupyter Lab' to open the Jupyter Lab application. 
 
+
+![SageMaker Console1](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/sm_console.png)
+
+The Notebook Instance name will begin with 'NotebookInstance-'
+
+![SageMaker Console2](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/sm_console2.png)
+
+In Jupyter Lab. open the config-fargate.ipynb notebook. This notebook walks through building and pushing a container to ECR using a Dockerfile. 
+
 ![Example Notebook](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/jupyterlab-screenshot.png "Jupyter Lab")
 
-Open config-fargate.ipynb, then select Run -> Run All Cells to run the notebook. This will create a new ECR repository, build the docker image, and push it to ECR. Take a look at the application code in the "SocialAnalyticsReader" folder.
+Select Run -> Run All Cells to run the notebook. This will create a new ECR repository, build the docker image, and push it to ECR. Take a look at the application code in the "SocialAnalyticsReader" folder. The output should look like the following:
+
+![Success](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/docker_build.png)
 
 ### Create the Fargate task definition
 
-1. In the Amazon ECS console, choose Repositories and select the tweetreader-repo repository that was created in the previous step. Copy the Repository URI.
-
+1. Navigate to the ECS Console, then choose Repositories and select the tweetreader-repo repository that was created in the previous step. Copy the Repository URI.
 2. Choose Task Definitions and then choose Create New Task Definition.
+
+![Launch Type](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/selectfargate.png)
+
 3. Select launch type compatibility as FARGATE and click Next Step.
 4. In the create task definition screen, do the following:
     * In Task Definition Name, type tweetreader-task
     * In Task Role, choose AccessRoleForTweetReaderfromFG
     * In Task Memory, choose 2GB
     * In Task CPU, choose 1 vCPU
+
+![Task Definition](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/task_container.png)
+ 
 5. Choose Add Container under Container Definitions. On the Add Container page, do the following:
     * Enter Container name as tweetreader-cont
     * Enter Image URL copied from step 1
     * Enter Memory Limits as 128 and choose Add.
 Note: Select TaskExecutionRole as “ecsTaskExecutionRole” if it already exists. If not, select Create new role and it will create “ecsTaskExecutionRole” for you.
+
+![Add container](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/task_container.png)
+
 6. Choose the Create button on the task definition screen to create the task. It will successfully create the task, execution role and Amazon CloudWatch Logs groups.
+
 7. In the Amazon ECS console, choose Clusters and create cluster. Select template as “Networking only, Powered by AWS Fargate” and chooose the next step.
+
+![Create Cluster 1](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/create-cluster1.png)
+
 8. Enter cluster name as tweetreader-cluster and choose Create.
+
+![Configure Cluster](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/create_cluster.png)
 
 ### Create an ECS cluster and start the Fargate task
 
 1. In the Amazon ECS console, go to Task Definitions, select the tweetreader-task, choose Actions, and then choose Run Task.
-On the Run Task page, for Launch Type select Fargate, for Cluster select tweetreader-cluster, select Cluster VPC and Subnets values, and then choose Run Task.
+On the Run Task page, for Launch Type select Fargate, for Cluster select tweetreader-cluster, select Cluster VPC and Subnets values, and then choose Run Task. Select the VPC that was created as part of the CFN stack (You can refer back to the CFN outputs tab for the identifyer if you have multiple VPCs). 
+
+![https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/run_task.png](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/run_task.png)
+
 2. To test the application, choose the running task in the Fargate console. Go to the logs tab and verify there is nothing there. This means the node application is running and no errors occurred.
 
 After a few minutes, you should be able to see the various datasets in the S3 bucket that the CloudFormation template created:
 **Note (If you don’t see all three prefixes)**: If you don’t see any data, check to make sure the Twitter reader is reading correctly and not creating errors. If you only see a raw prefix and not the others, check to make sure that the S3 trigger is set up on the Lambda function.
 
-### Create the Athena tables
+![Data](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/s3.png)
+
+### Create the Athena tables Option 1
+
+In the first option, we will use our SageMaker notebook to create the Athena tables. 
+
+Go back to the SageMaker notebook and open the "athena_queryes.ipynb" notebook file. 
+
+![Athena Notebook](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/athena-notebook1.png)
+This notebook will walk you through creating and querying Amazon Athena tables against the data directly in S3.
+
+### Create the Athena tables Option 2
 
 We are going to manually create the Amazon Athena tables. This is a great place to leverage AWS Glue crawling features in your data lake architectures. The crawlers will automatically discover the data format and data types of your different datasets that live in Amazon S3 (as well as relational databases and data warehouses). More details can be found in the documentation for [Crawlers with AWS Glue](http://docs.aws.amazon.com/glue/latest/dg/add-crawler.html).
 In Athena, run the following commands to create the Athena database and tables:
