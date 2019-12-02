@@ -151,7 +151,7 @@ After a few minutes, you should be able to see the various datasets in the S3 bu
 
 In the first option, we will use our SageMaker notebook to create the Athena tables. 
 
-Go back to the SageMaker notebook and open the "athena_queryes.ipynb" notebook file. 
+Go back to the SageMaker notebook and open the "athena_queries.ipynb" notebook file. 
 
 ![Athena Notebook](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/athena-notebook1.png)
 This notebook will walk you through creating and querying Amazon Athena tables against the data directly in S3.
