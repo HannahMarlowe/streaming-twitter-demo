@@ -19,7 +19,7 @@ Parameters:
   TwitterTermList:
     Description: List of terms for twitter to listen to
     Type: String
-    Default: '"AWS", "VPC", "EC2", "RDS", "S3"'
+    Default: '"NASA", "Mars Rover", "James Webb Space Telescope"'
   TwitterLanguages:
     Description: List of languages to use for the twitter streaming reader
     Type: String
@@ -52,13 +52,13 @@ Mappings:
   #  Map to the Lambda code in the right region:
   LambdaCode:
     us-east-1: # Virginia
-      codeuri: s3://reinvent18-builders
+      codeuri: reinvent18-builders
     us-east-2: # Ohio
-      codeuri: s3://reinvent19-builders-ohio
+      codeuri: reinvent19-builders-ohio
     us-west-2: # Oregon
-      codeuri: s3://reinvent19-builders-oregon
+      codeuri: reinvent19-builders-oregon
     eu-west-1: # Ireland
-      codeuri: s3://reinvent19-builders-ire
+      codeuri: reinvent19-builders-ire
     
 Resources:
   SageMakerSecurityGroup:
