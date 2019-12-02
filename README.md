@@ -362,6 +362,7 @@ select lang, ts.text, ts.originaltext from socialanalytics.tweet_sentiments ts j
 ### Building QuickSight dashboards
 
 1. Launch into [QuickSight](https://us-east-1.quicksight.aws.amazon.com/sn/start).
+![QuickSight DB](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/quicksight-main.png)
 2. Click the admin icon in the top right of the console and select "Manage QuickSight"
 3. Under Security & permission, select the 'Add or remove' option for QuickSight access to AWS Services
 4. Under Amazon S3, select the details link to be taken to a set of buckets that QuickSight can access
@@ -369,9 +370,12 @@ select lang, ts.text, ts.originaltext from socialanalytics.tweet_sentiments ts j
 6. Choose Manage data from the top right.
 7. Choose New Data Set.
 8. Create a new Athena Data Source.
+![](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/quicksight-new-athena-source.png)
 9. Select the socialanalytics database and the tweet_sentiments table.
+![](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/quicksight-sentiment-source.png)
 10. Then Choose Edit/Preview Data. 
 11. Under Table, choose Switch to custom SQL tool: 
+![](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/quicksoght-customsql.png)
 12. Give the query a name (such as ‘SocialAnalyticsQuery’)
 13. Put in this query:
 
@@ -403,15 +407,20 @@ We’ll step you through creating a dashboard.
 4. Move the tweetid to the value.
 5. And then choose it to perform Count Distinct: 
 6. Now switch it to a pie chart under visualization types.
+![](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/quicksight-visual1.png)
 
 Now let’s add another visual.
 
 1. Choose Add (near the top left corner of the page) : Add Visual.
 2. Resize it and move it next to your first pie chart. 
 3. Now choose sentiment, timestamp_in_seconds.
+![](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/second_visual.png)
 4. Under the field wells, or the chart itself, you can zoom in/out of the time. Let’s zoom into hours 
+![](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/quicksight_visual2byhour.png)
 5. Suppose on the timeline, we only want to see positive/negative/mixed sentiments. The Neutral line, at least for my Twitter terms, is causing the rest not to be seen easily. 
+![](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/quicksight_visual2_excluding.png)
 6. Just click the Neutral line and in the box that appears choose to Exclude Neutral. 
+![](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/quicksight_visual2_excluded.png)
 
 Let’s step through adding one more visual to this analysis to show the translated tweets:
 
