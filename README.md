@@ -292,7 +292,7 @@ select lang, count(*) cnt from socialanalytics.tweets group by lang order by cnt
 You can also start to query the translation details. Even if I don’t know the German word for shoe, I could easily do the following query:
 
 ```sql
-select ts.text, ts.originaltext from socialanalytics.tweet_sentiments ts join socialanalytics.tweets t on (ts.tweetid = t.id)where lang = 'de' and ts.text like '%Shoe%'
+select ts.text, ts.originaltext from socialanalytics.tweet_sentiments ts join socialanalytics.tweets t on (ts.tweetid = t.id) where lang = 'de' and ts.text like '%Shoe%'
 ```
 
 The results show a tweet talking about shoes based on the translated text:
@@ -317,15 +317,16 @@ select lang, ts.text, ts.originaltext from socialanalytics.tweet_sentiments ts j
 9. Put in this query:
 
 ```sql
-SELECT  s.*,e.entity,e.type,e.score,
+SELECT  s.* ,e.entity ,e.type ,e.score,
          t.lang as language,
          coordinates.coordinates[1] AS lon,
-         coordinates.coordinates[2] AS lat ,
+         coordinates.coordinates[2] AS lat,
          place.name,
          place.country,
          t.timestamp_ms / 1000 AS timestamp_in_seconds,
-         regexp_replace(source,'\<.+?\>', '') AS srcFROM socialanalytics.tweets tJOIN socialanalytics.tweet_sentiments s
-    ON (s.tweetid = t.id)JOIN socialanalytics.tweet_entities eON (e.tweetid = t.id)
+         regexp_replace(source,'\<.+?\>', '') AS src FROM socialanalytics.tweets t
+         JOIN socialanalytics.tweet_sentiments s
+    ON (s.tweetid = t.id) JOIN socialanalytics.tweet_entities e ON (e.tweetid = t.id)
 ```
 
 1. Then choose Finish.
