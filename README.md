@@ -26,11 +26,6 @@ During this session you will be implementing the following:
 
 We’ve provided you with an AWS CloudFormation template that will create all the ingestion components, ***_except_*** for the Amazon S3 notification for AWS Lambda (depicted as the dotted blue line).
 
-Click the button below to launch the CloudFormation stack in your preferred region. 
-#[![Launch Stack](https://github.com/HannahMarlowe/streaming-twitter-demo/blob/master/imgs/launch.svg)](https:#//console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=Social-Media-Analytics&templateURL=https://reinvent18-#builders.s3.amazonaws.com/2019/sentiment/code/deploy.yaml)
-
-#This will launch the CloudFormation stack automatically into the us-east-1 Region.
-
 | Region | View Template | Launch
 | ------ | ------ | ----- |
 | US East (N. Virginia) | [View](https://s3.amazonaws.com/twitter-analysis-demo-us-east-1/cfn/deploy.yaml) |[![sample image](https://docs.aws.amazon.com/documentdb/latest/developerguide/images/cloudformation-launch-stack-button.png)](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/review?templateURL=https://s3.amazonaws.com/twitter-analysis-demo-us-east-1/cfn/deploy.yaml&stackName=twitter-analysis-stack)
